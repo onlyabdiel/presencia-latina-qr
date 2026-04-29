@@ -1,12 +1,17 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QrReader } from '../components/QrReader';
 import { parseMemberId, validateQr } from '../services/checkin.service';
+import { getToken } from '../services/auth.service';
 
 export function ScannerPage() {
   const navigate = useNavigate();
   const [scanning, setScanning] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!getToken()) navigate('/login', { replace: true });
+  }, [navigate]);
 
   const handleScan = useCallback(
     async (text: string) => {
@@ -32,6 +37,12 @@ export function ScannerPage() {
 
       const result = await validateQr(memberId);
       setLoading(false);
+
+      if (result.unauthorized) {
+        navigate('/login', { replace: true });
+        return;
+      }
+
       navigate('/result', { state: result });
     },
     [scanning, navigate],
@@ -43,13 +54,11 @@ export function ScannerPage() {
 
       {/* Overlay */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-        {/* Dark borders */}
         <div className="absolute inset-0 bg-black/40" />
 
         {/* Scan frame */}
         <div className="relative z-10 w-64 h-64">
           <div className="absolute inset-0 border-2 border-white/20 rounded-xl" />
-          {/* Corner accents */}
           {['top-0 left-0', 'top-0 right-0', 'bottom-0 left-0', 'bottom-0 right-0'].map((pos, i) => (
             <div
               key={i}
