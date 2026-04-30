@@ -40,14 +40,12 @@ export async function validateQr(memberId: string): Promise<MemberAccessResult &
   const token = getToken();
 
   try {
-    const [checkInRes, enrollment] = await Promise.all([
-      axios.post(
-        `${API_URL}/check-ins`,
-        { memberId, method: 'QR', checkInType: 'DANCE' },
-        { headers: { Authorization: `Bearer ${token}` } },
-      ),
-      fetchEnrollment(memberId, token!),
-    ]);
+    const checkInRes = await axios.post(
+      `${API_URL}/check-ins`,
+      { memberId, method: 'QR', checkInType: 'DANCE' },
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    const enrollment = await fetchEnrollment(memberId, token!);
 
     const { member } = checkInRes.data;
     return {
