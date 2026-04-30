@@ -15,25 +15,49 @@ export function parseMemberId(qrText: string): string | null {
   return null;
 }
 
+async function fetchEnrollment(memberId: string, token: string): Promise<{ planName: string; planType: 'DANCE' | 'COMBO' | 'GYM'; classesRemaining: number | null }> {
+  try {
+    const res = await axios.get(`${API_URL}/enrollments`, {
+      params: { memberId, status: 'ACTIVE' },
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const enrollments: Array<{ classesRemaining: number | null; plan: { name: string; planType: string } }> = res.data?.data ?? res.data ?? [];
+    const dance = enrollments.find((e) => e.plan?.planType === 'DANCE' || e.plan?.planType === 'COMBO');
+    if (dance) {
+      return {
+        planName: dance.plan.name,
+        planType: dance.plan.planType as 'DANCE' | 'COMBO',
+        classesRemaining: dance.classesRemaining,
+      };
+    }
+  } catch {
+    // non-critical, fall through to defaults
+  }
+  return { planName: 'Clase de Baile', planType: 'DANCE', classesRemaining: null };
+}
+
 export async function validateQr(memberId: string): Promise<MemberAccessResult & { unauthorized?: boolean }> {
   const token = getToken();
 
   try {
-    const res = await axios.post(
-      `${API_URL}/check-ins`,
-      { memberId, method: 'QR', checkInType: 'DANCE' },
-      { headers: { Authorization: `Bearer ${token}` } },
-    );
+    const [checkInRes, enrollment] = await Promise.all([
+      axios.post(
+        `${API_URL}/check-ins`,
+        { memberId, method: 'QR', checkInType: 'DANCE' },
+        { headers: { Authorization: `Bearer ${token}` } },
+      ),
+      fetchEnrollment(memberId, token!),
+    ]);
 
-    const { member } = res.data;
+    const { member } = checkInRes.data;
     return {
       memberId: member.id,
       firstName: member.firstName,
       lastName: member.lastName,
       photoUrl: member.photoUrl ?? undefined,
-      planName: 'Clase de Baile',
-      planType: 'DANCE',
-      classesRemaining: null,
+      planName: enrollment.planName,
+      planType: enrollment.planType,
+      classesRemaining: enrollment.classesRemaining,
       status: 'VALID',
     };
   } catch (err: unknown) {
@@ -47,13 +71,14 @@ export async function validateQr(memberId: string): Promise<MemberAccessResult &
       }
       if (err.response?.status === 400) {
         const member = err.response.data?.member;
+        const enrollment = await fetchEnrollment(memberId, token!);
         return {
           memberId,
           firstName: member?.firstName ?? 'Acceso',
           lastName: member?.lastName ?? 'Denegado',
-          planName: err.response.data?.message ?? 'Plan vencido o sin clases',
-          planType: 'DANCE',
-          classesRemaining: null,
+          planName: enrollment.planName,
+          planType: enrollment.planType,
+          classesRemaining: enrollment.classesRemaining,
           status: 'EXPIRED',
         };
       }
