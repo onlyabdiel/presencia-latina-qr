@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QrReader } from '../components/QrReader';
 import { parseMemberId, validateQr } from '../services/checkin.service';
-import { getToken } from '../services/auth.service';
+import { getToken, clearToken, isTokenExpired } from '../services/auth.service';
 
 export function ScannerPage() {
   const navigate = useNavigate();
@@ -10,7 +10,15 @@ export function ScannerPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!getToken()) navigate('/login', { replace: true });
+    const checkAuth = () => {
+      if (!getToken() || isTokenExpired()) {
+        clearToken();
+        navigate('/login', { replace: true });
+      }
+    };
+    checkAuth();
+    const id = setInterval(checkAuth, 30_000);
+    return () => clearInterval(id);
   }, [navigate]);
 
   const handleScan = useCallback(
