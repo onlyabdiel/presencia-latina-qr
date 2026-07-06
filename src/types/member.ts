@@ -1,5 +1,5 @@
 export type PlanType = 'DANCE' | 'COMBO' | 'GYM';
-export type AccessStatus = 'VALID' | 'EXPIRED' | 'NOT_FOUND';
+export type AccessStatus = 'VALID' | 'EXPIRED' | 'NOT_FOUND' | 'NO_CLASSES';
 
 export interface MemberAccessResult {
   memberId: string;

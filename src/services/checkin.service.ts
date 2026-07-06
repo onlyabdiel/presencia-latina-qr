@@ -69,15 +69,17 @@ export async function validateQr(memberId: string): Promise<MemberAccessResult &
       }
       if (err.response?.status === 400) {
         const member = err.response.data?.member;
+        const message: string = err.response.data?.message ?? '';
+        const noClasses = message.toLowerCase().includes('no dance classes remaining');
         const enrollment = await fetchEnrollment(memberId, token!);
         return {
           memberId,
-          firstName: member?.firstName ?? 'Acceso',
-          lastName: member?.lastName ?? 'Denegado',
+          firstName: member?.firstName ?? (noClasses ? 'Sin' : 'Acceso'),
+          lastName: member?.lastName ?? (noClasses ? 'Clases' : 'Denegado'),
           planName: enrollment.planName,
           planType: enrollment.planType,
           classesRemaining: enrollment.classesRemaining,
-          status: 'EXPIRED',
+          status: noClasses ? 'NO_CLASSES' : 'EXPIRED',
         };
       }
     }

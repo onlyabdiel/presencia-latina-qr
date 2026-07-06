@@ -8,6 +8,7 @@ const config: Record<AccessStatus, { bg: string; icon: string; label: string }> 
   VALID: { bg: 'bg-green-500', icon: '✓', label: 'Acceso Válido' },
   EXPIRED: { bg: 'bg-red-500', icon: '✗', label: 'Plan Vencido' },
   NOT_FOUND: { bg: 'bg-gray-500', icon: '?', label: 'QR No Reconocido' },
+  NO_CLASSES: { bg: 'bg-orange-500', icon: '⚠', label: 'Sin Clases Disponibles' },
 };
 
 export function StatusBadge({ status }: Props) {

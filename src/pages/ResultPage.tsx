@@ -18,6 +18,8 @@ export function ResultPage() {
       ? 'bg-green-50'
       : result.status === 'EXPIRED'
       ? 'bg-red-50'
+      : result.status === 'NO_CLASSES'
+      ? 'bg-orange-50'
       : 'bg-gray-50';
 
   return (

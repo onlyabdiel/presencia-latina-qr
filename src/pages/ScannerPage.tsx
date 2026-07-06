@@ -2,11 +2,17 @@ import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QrReader } from '../components/QrReader';
 import { parseMemberId, validateQr } from '../services/checkin.service';
+import { clearToken } from '../services/auth.service';
 
 export function ScannerPage() {
   const navigate = useNavigate();
   const [scanning, setScanning] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  const handleLogout = useCallback(() => {
+    clearToken();
+    navigate('/login', { replace: true });
+  }, [navigate]);
 
   const handleScan = useCallback(
     async (text: string) => {
@@ -74,10 +80,17 @@ export function ScannerPage() {
       </div>
 
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-center py-6 bg-gradient-to-b from-black/60 to-transparent">
-        <h1 className="text-white text-lg font-bold tracking-widest uppercase">
+      <div className="absolute top-0 left-0 right-0 z-20 grid grid-cols-[1fr_auto_1fr] items-center px-4 py-6 bg-gradient-to-b from-black/60 to-transparent">
+        <div />
+        <h1 className="text-white text-lg font-bold tracking-widest uppercase text-center">
           Presencia Latina
         </h1>
+        <button
+          onClick={handleLogout}
+          className="justify-self-end text-white/80 hover:text-white text-xs font-semibold tracking-wide uppercase px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 transition-all"
+        >
+          Salir
+        </button>
       </div>
     </div>
   );
